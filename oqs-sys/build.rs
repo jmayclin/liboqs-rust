@@ -97,10 +97,16 @@ fn build_from_source() -> PathBuf {
             println!("cargo:rustc-link-lib=crypto");
         }
 
+        // 1. if OPENSSL_ROOT_DIR has been set by the consumer, prefer that value
+        // 2. otherwise check if the build tree has already pulled in a vendored
+        //    libcrypto from openssl-sys.
+        // 3. else just check for system paths.
         println!("cargo:rerun-if-env-changed=OPENSSL_ROOT_DIR");
         if let Ok(dir) = std::env::var("OPENSSL_ROOT_DIR") {
             let dir = Path::new(&dir).join("lib");
             println!("cargo:rustc-link-search={}", dir.display());
+        } else if let Ok(vendored_openssl_root) = std::env::var("DEP_OPENSSL_ROOT") {
+            config.define("OPENSSL_ROOT_DIR", vendored_openssl_root);
         } else if cfg!(target_os = "windows") || cfg!(target_os = "macos") {
             println!("cargo:warning=You may need to specify OPENSSL_ROOT_DIR or disable the default `openssl` feature.");
         }
