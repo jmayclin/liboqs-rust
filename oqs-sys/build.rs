@@ -143,6 +143,8 @@ fn build_from_source() -> PathBuf {
 
     // lib is installed to $outdir/lib
     let libdir = outdir.join("lib");
+    let libdir64 = outdir.join("lib64");
+
     if cfg!(windows) {
         // Static linking doesn't work on Windows
         println!("cargo:rustc-link-lib=oqs");
@@ -151,6 +153,7 @@ fn build_from_source() -> PathBuf {
         println!("cargo:rustc-link-lib=static=oqs");
     }
     println!("cargo:rustc-link-search=native={}", libdir.display());
+    println!("cargo:rustc-link-search=native={}", libdir64.display());
 
     outdir
 }
