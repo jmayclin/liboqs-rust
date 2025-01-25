@@ -92,12 +92,12 @@ fn build_from_source() -> PathBuf {
     if cfg!(feature = "openssl") {
         eprintln!("openssl feature enabled");
         config.define("OQS_USE_OPENSSL", "Yes");
-        if cfg!(windows) {
-            // Windows doesn't prefix with lib
-            println!("cargo:rustc-link-lib=libcrypto");
-        } else {
-            println!("cargo:rustc-link-lib=crypto");
-        }
+        // if cfg!(windows) {
+        //     // Windows doesn't prefix with lib
+        //     println!("cargo:rustc-link-lib=libcrypto");
+        // } else {
+        //     println!("cargo:rustc-link-lib=crypto");
+        // }
 
         // 1. if OPENSSL_ROOT_DIR has been set by the consumer, prefer that value
         // 2. otherwise check if the build tree has already pulled in a vendored
