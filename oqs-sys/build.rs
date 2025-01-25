@@ -39,7 +39,6 @@ fn generate_bindings(includedir: &Path, headerfile: &str, allow_filter: &str, bl
 }
 
 fn build_from_source() -> PathBuf {
-    eprintln!("creating the cmake config");
     let mut config = cmake::Config::new("liboqs");
     config.profile("Release");
     config.define("OQS_BUILD_ONLY_LIB", "Yes");
@@ -92,12 +91,6 @@ fn build_from_source() -> PathBuf {
     if cfg!(feature = "openssl") {
         eprintln!("openssl feature enabled");
         config.define("OQS_USE_OPENSSL", "Yes");
-        // if cfg!(windows) {
-        //     // Windows doesn't prefix with lib
-        //     println!("cargo:rustc-link-lib=libcrypto");
-        // } else {
-        //     println!("cargo:rustc-link-lib=crypto");
-        // }
 
         // 1. if OPENSSL_ROOT_DIR has been set by the consumer, prefer that value
         // 2. otherwise check if the build tree has already pulled in a vendored
@@ -105,22 +98,14 @@ fn build_from_source() -> PathBuf {
         // 3. else just check for system paths.
         println!("cargo:rerun-if-env-changed=OPENSSL_ROOT_DIR");
         if let Ok(dir) = std::env::var("OPENSSL_ROOT_DIR") {
-            eprintln!("openssl root dir has already been set");
-            println!("cargo:warning=OPENSSL_ROOT_DIR is already set");
             let dir = Path::new(&dir).join("lib");
             println!("cargo:rustc-link-search={}", dir.display());
         } else if let Ok(vendored_openssl_root) = std::env::var("DEP_OPENSSL_ROOT") {
-            eprintln!("using vendored openssl root {vendored_openssl_root}");
-            println!("cargo:warning=setting OPENSSL_ROOT_DIR to {vendored_openssl_root}");
             config.define("OPENSSL_ROOT_DIR", vendored_openssl_root);
         } else if cfg!(target_os = "windows") || cfg!(target_os = "macos") {
-            eprintln!("danger, you should set openssl root dir");
             println!("cargo:warning=You may need to specify OPENSSL_ROOT_DIR or disable the default `openssl` feature.");
-        } else {
-            eprintln!("not in any defined path, oh dear");
         }
     } else {
-        eprintln!("openssl feature not enabled");
         config.define("OQS_USE_OPENSSL", "No");
     }
 
@@ -141,7 +126,7 @@ fn build_from_source() -> PathBuf {
         );
     }
 
-    // lib is installed to $outdir/lib
+    // lib is installed to $outdir/lib or lib64, depending on CMake conventions
     let libdir = outdir.join("lib");
     let libdir64 = outdir.join("lib64");
 
@@ -165,7 +150,6 @@ fn includedir_from_source() -> PathBuf {
 
 fn probe_includedir() -> PathBuf {
     if cfg!(feature = "vendored") {
-        println!("cargo:warning=doing a vendored build");
         return includedir_from_source();
     }
 
